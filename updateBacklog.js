@@ -1,28 +1,3 @@
-/**
- * Copyright Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Returns the array of cards that should be rendered for the current
- * e-mail thread. The name of this function is specified in the
- * manifest 'onTriggerFunction' field, indicating that this function
- * runs every time the add-on is started.
- *
- * @param {Object} e The data provided by the Gmail UI.
- * @return {Card[]}
- */
 function buildAddOn(e) {
   // Activate temporary Gmail add-on scopes.
   var accessToken = e.messageMetadata.accessToken;
@@ -33,14 +8,13 @@ function buildAddOn(e) {
   
   var thread = message.getThread();
   var messages = thread.getMessages();
-  var lastmessage = messages[thread.getMessageCount() - 1 ];
  
   var section = CardService.newCardSection()
     .setHeader("<font color=\"#1257e0\"><b>現在のメール情報</b></font>");       
 
   var subject = thread.getFirstMessageSubject();   // 件名(スレッドの最初)
-  var from = lastmessage.getFrom();                // 送信元(スレッドの最後)
-  var plainbody = lastmessage.getPlainBody();      // 本文(スレッドの最後)    
+  var from = message.getFrom();                // 送信元(スレッドの選択位置)
+  var plainbody = message.getPlainBody();      // 本文(スレッドの選択位置)    
 
   var splitbody = plainbody.split(/2...年.+?>:/);  //返信時に自動的に入る引用部分を自動挿入の文字列を利用して除外する
   var body = splitbody[0];
@@ -50,11 +24,11 @@ function buildAddOn(e) {
   .setContent(subject);
   
   var from_widget = CardService.newKeyValue()
-  .setTopLabel("最終送信者")
+  .setTopLabel("送信者")
   .setContent(from);             
   
   var body_widget = CardService.newKeyValue()
-  .setTopLabel("最終送信本文")
+  .setTopLabel("送信本文")
   .setContent(body);
 
   var button_widget = CardService.newTextButton()
@@ -94,11 +68,27 @@ function accessBacklog(e){
   var msg;
   
   var id = getIssueId(subject);
- 
-  if ( isCompleteStatus(id)) {
-    msg =  "既に課題がクローズしています";  // 既に課題がクローズしているので何もしない 
+  
+  if(id){
+    if ( isCompleteStatus(id)) {
+      msg =  "既に課題がクローズしています";  // 既に課題がクローズしているので何もしない 
+    } else {
+      var result = addComment(id,from,body);  //コメントを追加
+      
+      if( result ){
+        var result2 = completeStatus(id); //ステータス更新
+        
+        if( result2 ) {
+          msg = "課題をクローズしました";  
+        } else {
+            msg = "ステータスの更新に失敗しました";    
+        }
+      } else {
+        msg = "コメントの追加に失敗しました";
+      }
+    }
   } else {
-    msg =  "課題をクローズしました(未実装)";
+    msg = "該当する課題がありません"; 
   }
   
   // gmailの下部に通知を出す
@@ -110,6 +100,7 @@ function accessBacklog(e){
 }
 
 // 課題のステータスを取得し完了であるか確認する
+// 使用API https://developer.nulab-inc.com/ja/docs/backlog/api/2/get-issue/
 function isCompleteStatus(id){
    var url = "https://" + spaceurl + "/api/v2/issues/" + id + "?apiKey=" + apikey;
   
@@ -120,27 +111,60 @@ function isCompleteStatus(id){
 }
 
 // メールタイトルに一致する課題IDを取得
+// 使用API https://developer.nulab-inc.com/ja/docs/backlog/api/2/get-issue-list/
 function getIssueId(subject){
-  
-  var url = "https://" + spaceurl + "/api/v2/issues?apiKey=" + apikey + "&projectId[]=2200&keyword=" + subject;
-  
+  var url = "https://" + spaceurl + "/api/v2/issues?apiKey=" + apikey + "&projectId[]=2200&keyword=" + encodeURIComponent(subject);
+ 
   var res= JSON.parse(UrlFetchApp.fetch(url));
-  return res[0].id;
+  return (res.length ? res[0].id : null);
 }
 
-
-
 // 課題のコメント欄にメール内容を転載
+// 使用API https://developer.nulab-inc.com/ja/docs/backlog/api/2/add-comment/
 function addComment(id,from,body){
+  var url = "https://" + spaceurl + "/api/v2/issues/" + id + "/comments?apiKey=" + apikey;
+  var name = from.replace(/"(.+)".+/,"$1"); //余計な文字を削除
   
+  var param = {
+    'content' :  name + "さん回答済み、クローズ。\n\n```\n" + body + "\n```" 
+  };
+      
+  var options = {
+    'method': 'POST',
+    'headers' : {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    'payload': param
+  };
+  
+  var res = UrlFetchApp.fetch(url, options);
+  
+  return res.getResponseCode() == '201';
 }
 
 // 課題のステータスを完了させる
+// 使用API https://developer.nulab-inc.com/ja/docs/backlog/api/2/update-issue/
 function completeStatus(id){
+  var url = "https://" + spaceurl + "/api/v2/issues/" + id + "?apiKey=" + apikey;
+
+  var param = {
+    'statusId' : "4",  //｢完了｣にする
+    'resolutionId' : "0" //｢対応済み｣にする
+  };
   
+  var options = {
+    'method': 'PATCH',
+    'headers' : {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    'payload': param
+  };
+  
+  var res = UrlFetchApp.fetch(url, options);  
+  
+  return res.getResponseCode() == '200';
 }
 
 function testAPI(){
-  Logger.log(isCompleteStatus(getIssueId("【質問】返品、再売上のHCC引継ぎについて")));
-  Logger.log(isCompleteStatus(getIssueId("【M企】新商品登録で商品画像の登録ができません")));
+  Logger.log(isCompleteStatus(getIssueId("メールタイトル")));
 }
