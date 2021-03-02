@@ -1,3 +1,7 @@
+var spaceurl = PropertiesService.getScriptProperties().getProperty('spaceurl');
+var apikey = PropertiesService.getScriptProperties().getProperty('apikey');
+var backlog_project_id = PropertiesService.getScriptProperties().getProperty('backlog_project_id');
+
 function buildAddOn(e) {
   // Activate temporary Gmail add-on scopes.
   var accessToken = e.messageMetadata.accessToken;
@@ -79,10 +83,6 @@ function buildAddOn(e) {
 
   return [card];
 }
-
-spaceurl = PropertiesService.getScriptProperties().getProperty('spaceurl');
-apikey = PropertiesService.getScriptProperties().getProperty('apikey');
-backlog_project_id = PropertiesService.getScriptProperties().getProperty('backlog_project_id');
 
 // BacklogAPIにアクセス
 // コールバックとして ActionResponseを返す
