@@ -54,8 +54,8 @@ function buildAddOn(e) {
     .setType(CardService.SelectionInputType.DROPDOWN)
     .setFieldName('issue_type')
     .setOnChangeAction(CardService.newAction()
-                       .setFunctionName('changeBacklog')
-                       .setParameters({ 'subject': subject }));
+                        .setFunctionName('changeBacklog')
+                        .setParameters({ 'subject': subject }));
 
   
   //種別プルダウンの作成
@@ -210,7 +210,7 @@ function addComment(id, from, body) {
 function changeIssueType(id,issue_type){  
   var url = "https://" + spaceurl + "/api/v2/issues/" + id + "?apiKey=" + apikey;
   
-  it = String(parseInt(issue_type,10)); // 整数で代入した時点で小数点が入ってしまうので整数化してから文字列に変更している
+  var it = String(parseInt(issue_type,10)); // 整数で代入した時点で小数点が入ってしまうので整数化してから文字列に変更している
   var param = {
     'issueTypeId' : it
   };
