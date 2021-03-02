@@ -1,0 +1,25 @@
+{
+  "name": "updatebacklog",
+  "version": "1.0.0",
+  "description": "Backlogのステータスを更新するGmail Add-onです。詳しくはhttps://qiita.com/ansark88/items/ae617a378463ad3f66ba を参照のこと。",
+  "main": "updateBacklog.js",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^7.21.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ansark88/updateBacklogStatus.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ansark88/updateBacklogStatus/issues"
+  },
+  "homepage": "https://github.com/ansark88/updateBacklogStatus#readme"
+}
