@@ -82,7 +82,7 @@ function buildAddOn(e) {
 
 spaceurl = PropertiesService.getScriptProperties().getProperty('spaceurl');
 apikey = PropertiesService.getScriptProperties().getProperty('apikey');
-BACKLOG_PROJECT_ID = '2200'
+backlog_project_id = PropertiesService.getScriptProperties().getProperty('backlog_project_id');
 
 // BacklogAPIにアクセス
 // コールバックとして ActionResponseを返す
@@ -167,7 +167,7 @@ function isCompleteStatus(id) {
 // 種別一覧を取得
 // 使用API https://developer.nulab-inc.com/ja/docs/backlog/api/2/get-issue-list/
 function getIssueTypes() {
-  var url = "https://" + spaceurl + "/api/v2/projects/" + BACKLOG_PROJECT_ID + "/issueTypes?apiKey=" + apikey;
+  var url = "https://" + spaceurl + "/api/v2/projects/" + backlog_project_id + "/issueTypes?apiKey=" + apikey;
 
   var res = JSON.parse(UrlFetchApp.fetch(url));
   return (res.length ? res : null);
@@ -176,7 +176,7 @@ function getIssueTypes() {
 // メールタイトルに一致する課題IDを取得
 // 使用API https://developer.nulab-inc.com/ja/docs/backlog/api/2/get-issue-list/
 function getIssueId(subject) {
-  var url = "https://" + spaceurl + "/api/v2/issues?apiKey=" + apikey + "&projectId[]=2200&keyword=" + encodeURIComponent(subject);
+  var url = "https://" + spaceurl + "/api/v2/issues?apiKey=" + apikey + "&projectId[]=" + backlog_project_id + "&keyword=" + encodeURIComponent(subject);
 
   var res = JSON.parse(UrlFetchApp.fetch(url));
   return (res.length ? res[0].id : null);
@@ -257,13 +257,6 @@ function completeStatus(id) {
 }
 
 function testAPI() {
-  Logger.log( changeIssueType(15493078,9317))
-  Logger.log('end')
-}
-
-function testNum(){
-  test = '9319.0';
-  test2 = parseInt(test,10);
-  test3 = String(test2);  
-  Logger.log(test3)
+  Logger.log( changeIssueType(15493078,9317));
+  Logger.log('end');
 }
